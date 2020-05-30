@@ -27,7 +27,11 @@ type Position = {
   mouseY: number;
 };
 
-export default function Canvas() {
+interface Props {
+  readonly penColor: string;
+}
+
+export default function Canvas(props: Props) {
   const [isMouseDown, setMouseDown] = useState<boolean>(false);
   const [drawObject, setDrawObject] = useState<Position>();
   let c = useRef<HTMLCanvasElement>(null);
@@ -64,13 +68,6 @@ export default function Canvas() {
       const mouseX = event.nativeEvent.offsetX;
       const mouseY = event.nativeEvent.offsetY;
 
-      console.log(
-        "offset",
-        event.nativeEvent.offsetX,
-        event.nativeEvent.offsetY
-      );
-      console.log("mouse", event.clientX, event.clientY);
-
       if (isMouseDown) {
         setDrawObject({ mouseX, mouseY });
       }
@@ -90,9 +87,9 @@ export default function Canvas() {
     if (context !== undefined) {
       context.beginPath();
 
-      context.lineWidth = 1;
+      context.lineWidth = 3;
       context.lineCap = "round";
-      context.strokeStyle = "#c0392b";
+      context.strokeStyle = props.penColor;
       context.moveTo(fromX, fromY + 0.5);
       context.lineTo(mouseX, mouseY + 0.5);
       context.stroke();

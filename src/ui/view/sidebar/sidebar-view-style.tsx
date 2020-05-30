@@ -36,3 +36,19 @@ export const SidebarAction = styled.div<{ selected: boolean }>`
 
   ${(p) => (p.selected ? "background-color: #C0C0C0;" : "")}
 `;
+
+export const ColorContainer = styled.div`
+  display: flex;
+  align-items: center;
+
+  height: 100%;
+`;
+
+export const ColorPicker = styled.div<{ color: string }>`
+  border-radius: 400px;
+  background-color: ${(p) => p.color};
+  width: 24px;
+  height: 24px;
+
+  margin: 8px 4px;
+`;
