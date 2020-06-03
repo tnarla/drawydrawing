@@ -1,15 +1,19 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   SidebarContainer,
   SidebarContent,
   SidebarAction as SidebarActionContainer,
-  ColorContainer,
+  ModalContainer,
   ColorPicker,
+  SizePicker,
 } from "./sidebar-view-style";
-import SidebarModal from "./sidebar-modal";
+import Slider from "@material-ui/core/Slider";
+import ReactModal from "react-modal";
 
 interface Props {
-  readonly setColor: (color: string) => void;
+  readonly setColor?: (color: string) => void;
+  readonly setSize?: (size: number) => void;
+  readonly penColor?: string;
 }
 
 export type SidebarAction = "color" | "draw" | "erase" | undefined;
@@ -27,75 +31,56 @@ export default function Sidebar(props: Props) {
     setTop(rect.top);
   }
 
+  function closeModal() {
+    setShowModal(false);
+    setHoveredAction(undefined);
+    setTop(-50);
+  }
+
   return (
     <>
-      <SidebarModal show={showModal} top={top}>
-        <Colors setColor={props.setColor} />
-      </SidebarModal>
+      <Colors
+        setColor={props.setColor}
+        isOpen={selectedAction === "color" && showModal}
+        closeModal={closeModal}
+        top={top}
+      />
+      <Size
+        setSize={props.setSize}
+        isOpen={selectedAction === "draw" && showModal}
+        closeModal={closeModal}
+        top={top}
+        penColor={props.penColor}
+      />
       <SidebarContainer>
         <SidebarContent>
           <SidebarActionContainer
-            selected={selectedAction === "color"}
-            onClick={useCallback(() => {
-              setSelectedAction("color");
-            }, [selectedAction])}
-            onMouseOver={useCallback(
+            selected={selectedAction === "color" && showModal}
+            onClick={useCallback(
               (event) => {
-                setShowModal(true);
+                setSelectedAction("color");
+                setShowModal(!showModal);
                 setHoveredAction("color");
                 getTopBound(event);
               },
-              [showModal, hoveredAction, top]
+              [selectedAction, showModal, hoveredAction, top]
             )}
-            onMouseOut={useCallback(() => {
-              setShowModal(false);
-              setHoveredAction(undefined);
-              setTop(-50);
-            }, [showModal, hoveredAction, top])}
           >
             🎨
           </SidebarActionContainer>
           <SidebarActionContainer
-            selected={selectedAction === "draw"}
-            onClick={useCallback(() => {
-              setSelectedAction("draw");
-            }, [selectedAction])}
-            onMouseOver={useCallback(
+            selected={selectedAction === "draw" && showModal}
+            onClick={useCallback(
               (event) => {
-                setShowModal(true);
+                setSelectedAction("draw");
+                setShowModal(!showModal);
                 setHoveredAction("draw");
                 getTopBound(event);
               },
-              [showModal, hoveredAction, top]
+              [selectedAction, showModal, hoveredAction, top]
             )}
-            onMouseOut={useCallback(() => {
-              setShowModal(false);
-              setHoveredAction(undefined);
-              setTop(-50);
-            }, [showModal, hoveredAction, top])}
           >
-            ✨
-          </SidebarActionContainer>
-          <SidebarActionContainer
-            selected={selectedAction === "erase"}
-            onClick={useCallback(() => {
-              setSelectedAction("erase");
-            }, [selectedAction])}
-            onMouseOver={useCallback(
-              (event) => {
-                setShowModal(true);
-                setHoveredAction("erase");
-                getTopBound(event);
-              },
-              [showModal, hoveredAction, top]
-            )}
-            onMouseOut={useCallback(() => {
-              setShowModal(false);
-              setHoveredAction(undefined);
-              setTop(-50);
-            }, [showModal, hoveredAction, top])}
-          >
-            👌
+            🖌
           </SidebarActionContainer>
         </SidebarContent>
       </SidebarContainer>
@@ -103,7 +88,13 @@ export default function Sidebar(props: Props) {
   );
 }
 
-function Colors(props: Props) {
+interface ModalProps extends Props {
+  readonly isOpen: boolean;
+  readonly closeModal: () => void;
+  readonly top: number;
+}
+
+function Colors(props: ModalProps) {
   const colors = [
     "#f94144",
     "#f3722c",
@@ -116,11 +107,81 @@ function Colors(props: Props) {
     "#011627",
     "#fdfffc",
   ];
+
   return (
-    <ColorContainer>
-      {colors.map((color) => (
-        <ColorPicker color={color} onClick={() => props.setColor(color)} />
-      ))}
-    </ColorContainer>
+    <ReactModal
+      isOpen={props.isOpen}
+      onRequestClose={props.closeModal}
+      style={{
+        overlay: { backgroundColor: "none" },
+        content: {
+          position: "absolute",
+          top: props.top,
+          left: 74,
+          width: "fit-content",
+          height: "fit-content",
+          backgroundColor: "#ebebeb",
+          boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.2)",
+          borderRadius: 4,
+          padding: 0,
+        },
+      }}
+    >
+      <ModalContainer>
+        {colors.map((color) => (
+          <ColorPicker
+            color={color}
+            onClick={() => {
+              props.setColor && props.setColor(color);
+              props.closeModal();
+            }}
+          />
+        ))}
+      </ModalContainer>
+    </ReactModal>
+  );
+}
+
+function Size(props: ModalProps) {
+  const sizes = [1, 3, 5, 10, 25, 50];
+
+  return (
+    <ReactModal
+      isOpen={props.isOpen}
+      onRequestClose={props.closeModal}
+      style={{
+        overlay: { backgroundColor: "none" },
+        content: {
+          position: "absolute",
+          top: props.top,
+          left: 74,
+          width: "fit-content",
+          height: "fit-content",
+          backgroundColor: "#ebebeb",
+          boxShadow: "4px 4px 8px rgba(0, 0, 0, 0.2)",
+          borderRadius: 4,
+          padding: 0,
+        },
+      }}
+    >
+      <ModalContainer>
+        {/* <Slider
+          value={typeof value === "number" ? value : 0}
+          onChange={handleSliderChange}
+          valueLabelDisplay="auto"
+          aria-labelledby="input-slider"
+        /> */}
+        {sizes.map((size) => (
+          <SizePicker
+            color={props.penColor ?? "black"}
+            size={size}
+            onClick={() => {
+              props.setSize && props.setSize(size);
+              props.closeModal();
+            }}
+          />
+        ))}
+      </ModalContainer>
+    </ReactModal>
   );
 }

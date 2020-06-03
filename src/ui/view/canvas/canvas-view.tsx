@@ -29,6 +29,7 @@ type Position = {
 
 interface Props {
   readonly penColor: string;
+  readonly penSize: number;
 }
 
 export default function Canvas(props: Props) {
@@ -87,7 +88,7 @@ export default function Canvas(props: Props) {
     if (context !== undefined) {
       context.beginPath();
 
-      context.lineWidth = 3;
+      context.lineWidth = props.penSize;
       context.lineCap = "round";
       context.strokeStyle = props.penColor;
       context.moveTo(fromX, fromY + 0.5);

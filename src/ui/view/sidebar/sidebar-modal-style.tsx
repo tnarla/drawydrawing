@@ -4,8 +4,8 @@ export const SidebarModalContainer = styled.div<{ show: boolean; top: number }>`
   /* ${(p) => !p.show && "display:none;"} */
 
   position:absolute;
-  top: 50px;
-  /* top: ${(p) => p.top}px; */
+  /* keep it there top: 50px; */
+  top: ${(p) => p.top}px;
   left: 74px;
 
   width: fit-content;
