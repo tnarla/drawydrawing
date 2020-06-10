@@ -16,7 +16,7 @@ interface Props {
   readonly penColor?: string;
 }
 
-export type SidebarAction = "color" | "draw" | "erase" | undefined;
+export type SidebarAction = "color" | "draw" | "erase" | "save" | undefined;
 
 export default function Sidebar(props: Props) {
   const [selectedAction, setSelectedAction] = useState<SidebarAction>(
@@ -35,6 +35,20 @@ export default function Sidebar(props: Props) {
     setShowModal(false);
     setHoveredAction(undefined);
     setTop(-50);
+  }
+
+  function downloadCanvasAsImage() {
+    let downloadLink = document.createElement("a");
+    downloadLink.setAttribute("download", "CanvasAsImage.png");
+    const canvas = document.querySelector("canvas");
+    if (!canvas) return;
+    let dataURL = canvas.toDataURL("image/png");
+    let url = dataURL.replace(
+      /^data:image\/png/,
+      "data:application/octet-stream"
+    );
+    downloadLink.setAttribute("href", url);
+    downloadLink.click();
   }
 
   return (
@@ -82,6 +96,12 @@ export default function Sidebar(props: Props) {
           >
             🖌
           </SidebarActionContainer>
+          <SidebarActionContainer
+            selected={selectedAction === "save" && showModal}
+            onClick={() => downloadCanvasAsImage()}
+          >
+            💾
+          </SidebarActionContainer>
         </SidebarContent>
       </SidebarContainer>
     </>
@@ -103,6 +123,7 @@ function Colors(props: ModalProps) {
     "#90be6d",
     "#43aa8b",
     "#577590",
+    "#A163F5",
     "#774936",
     "#011627",
     "#fdfffc",
@@ -113,11 +134,11 @@ function Colors(props: ModalProps) {
       isOpen={props.isOpen}
       onRequestClose={props.closeModal}
       style={{
-        overlay: { backgroundColor: "none" },
+        overlay: { backgroundColor: "none", zIndex: 10 },
         content: {
           position: "absolute",
           top: props.top,
-          left: 74,
+          left: 111,
           width: "fit-content",
           height: "fit-content",
           backgroundColor: "#ebebeb",
@@ -150,11 +171,11 @@ function Size(props: ModalProps) {
       isOpen={props.isOpen}
       onRequestClose={props.closeModal}
       style={{
-        overlay: { backgroundColor: "none" },
+        overlay: { backgroundColor: "none", zIndex: 10 },
         content: {
           position: "absolute",
           top: props.top,
-          left: 74,
+          left: 111,
           width: "fit-content",
           height: "fit-content",
           backgroundColor: "#ebebeb",
@@ -165,12 +186,6 @@ function Size(props: ModalProps) {
       }}
     >
       <ModalContainer>
-        {/* <Slider
-          value={typeof value === "number" ? value : 0}
-          onChange={handleSliderChange}
-          valueLabelDisplay="auto"
-          aria-labelledby="input-slider"
-        /> */}
         {sizes.map((size) => (
           <SizePicker
             color={props.penColor ?? "black"}

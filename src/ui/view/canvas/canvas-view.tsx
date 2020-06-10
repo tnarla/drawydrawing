@@ -35,25 +35,50 @@ interface Props {
 export default function Canvas(props: Props) {
   const [isMouseDown, setMouseDown] = useState<boolean>(false);
   const [drawObject, setDrawObject] = useState<Position>();
-  let c = useRef<HTMLCanvasElement>(null);
 
-  const context = useMemo(() => {
-    if (!c || !c.current) return;
-    var ctx = c.current.getContext("2d");
+  const [canvasState, setCanvasState] = useState<{
+    element?: HTMLCanvasElement;
+    context?: CanvasRenderingContext2D;
+  }>({});
 
-    if (ctx === null) return;
-    ctx.canvas.width = 800;
-    ctx.canvas.height = 600;
+  const { element, context } = canvasState;
 
-    return ctx;
-  }, [c.current]);
+  const handleCanvasRef = useCallback((ref) => {
+    let ctx;
+
+    if (ref) {
+      ctx = ref.getContext("2d");
+    }
+
+    setCanvasState({
+      element: ref,
+      context: ctx,
+    });
+  }, []);
 
   let prevPosition: Position | undefined = usePrevious(drawObject);
 
-  useEffect(() => {
-    if (drawObject === undefined || prevPosition === undefined) return;
-    const { mouseX, mouseY } = drawObject;
+  const windowSize = useWindowSize();
 
+  useEffect(() => {
+    console.log("should set height and width", element, context);
+    if (!element || !context) return;
+    // Grab image data here...
+    let imageData = context.getImageData(
+      0,
+      0,
+      windowSize.width,
+      windowSize.height
+    );
+    element.width = windowSize.width;
+    element.height = windowSize.height;
+    // Restore image data here...
+    context.putImageData(imageData, 0, 0);
+  }, [windowSize, context]);
+
+  useEffect(() => {
+    if (!drawObject || !prevPosition) return;
+    const { mouseX, mouseY } = drawObject;
     draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY);
   }, [drawObject]);
 
@@ -100,12 +125,40 @@ export default function Canvas(props: Props) {
   return (
     <CanvasContainer>
       <canvas
-        style={{ display: "block" }}
-        ref={c}
-        onMouseDown={onDown}
-        onMouseMove={onMove}
-        onMouseUp={onUp}
+        style={{ display: "block", touchAction: "none" }}
+        ref={handleCanvasRef}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
       ></canvas>
     </CanvasContainer>
   );
+}
+
+function useWindowSize() {
+  const isClient = typeof window === "object";
+
+  function getSize() {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  const [windowSize, setWindowSize] = useState(getSize);
+
+  useEffect(() => {
+    if (!isClient) {
+      return;
+    }
+
+    function handleResize() {
+      setWindowSize(getSize());
+    }
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // Empty array ensures that effect is only run on mount and unmount
+
+  return windowSize;
 }

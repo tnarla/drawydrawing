@@ -1,8 +1,12 @@
 import styled from "styled-components";
 
 export const SidebarContainer = styled.div`
+  position: absolute;
+  z-index: 6;
+  top: 50px;
+  left: 50px;
+
   width: 50px;
-  height: 100%;
 
   margin-right: 24px;
 `;
@@ -41,8 +45,6 @@ export const SidebarAction = styled.div<{ selected: boolean }>`
 export const ModalContainer = styled.div`
   display: flex;
   align-items: center;
-
-  height: 100%;
 `;
 
 export const ColorPicker = styled.div<{ color: string }>`
