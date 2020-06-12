@@ -102,6 +102,18 @@ export default function Sidebar(props: Props) {
           >
             💾
           </SidebarActionContainer>
+          <SidebarActionContainer
+            selected={selectedAction === "save" && showModal}
+            onClick={() => downloadCanvasAsImage()}
+          >
+            ⬅
+          </SidebarActionContainer>
+          <SidebarActionContainer
+            selected={selectedAction === "save" && showModal}
+            onClick={() => downloadCanvasAsImage()}
+          >
+            ➡
+          </SidebarActionContainer>
         </SidebarContent>
       </SidebarContainer>
     </>

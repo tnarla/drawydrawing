@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { CanvasContainer } from "./canvas-view-style";
 
+const ole3lines = "vjj";
+
 // Hook
 function usePrevious<T>(value: T) {
   // The ref object is a generic container whose current property is mutable ...
@@ -35,6 +37,8 @@ interface Props {
 export default function Canvas(props: Props) {
   const [isMouseDown, setMouseDown] = useState<boolean>(false);
   const [drawObject, setDrawObject] = useState<Position>();
+  const [undoImage, setUndoImage] = useState<ImageData | undefined>(undefined);
+  const [redoImage, setRedoImage] = useState<ImageData | undefined>(undefined);
 
   const [canvasState, setCanvasState] = useState<{
     element?: HTMLCanvasElement;
@@ -61,9 +65,7 @@ export default function Canvas(props: Props) {
   const windowSize = useWindowSize();
 
   useEffect(() => {
-    console.log("should set height and width", element, context);
     if (!element || !context) return;
-    // Grab image data here...
     let imageData = context.getImageData(
       0,
       0,
@@ -72,7 +74,6 @@ export default function Canvas(props: Props) {
     );
     element.width = windowSize.width;
     element.height = windowSize.height;
-    // Restore image data here...
     context.putImageData(imageData, 0, 0);
   }, [windowSize, context]);
 
@@ -105,6 +106,16 @@ export default function Canvas(props: Props) {
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       setMouseDown(false);
       setDrawObject(undefined);
+
+      if (!context) return;
+      let imageData = context.getImageData(
+        0,
+        0,
+        windowSize.width,
+        windowSize.height
+      );
+
+      setUndoImage(imageData);
     },
     [isMouseDown, drawObject]
   );
@@ -112,7 +123,6 @@ export default function Canvas(props: Props) {
   function draw(mouseX: number, mouseY: number, fromX: number, fromY: number) {
     if (context !== undefined) {
       context.beginPath();
-
       context.lineWidth = props.penSize;
       context.lineCap = "round";
       context.strokeStyle = props.penColor;
@@ -134,6 +144,43 @@ export default function Canvas(props: Props) {
     </CanvasContainer>
   );
 }
+
+// // Hook
+// function useEventListener(eventName: string, handler: any, element = window) {
+//   // Create a ref that stores handler
+//   const savedHandler = useRef();
+
+//   // Update ref.current value if handler changes.
+//   // This allows our effect below to always get latest handler ...
+//   // ... without us needing to pass it in effect deps array ...
+//   // ... and potentially cause effect to re-run every render.
+//   useEffect(() => {
+//     savedHandler.current = handler;
+//   }, [handler]);
+
+//   useEffect(
+//     () => {
+//       // Make sure element supports addEventListener
+//       // On
+//       const isSupported = element && element.addEventListener;
+//       if (!isSupported) return;
+
+//       // Create event listener that calls handler function stored in ref
+//       if (!savedHandler || !savedHandler.current) return;
+
+//       const eventListener = (event: Event) => savedHandler.current(event);
+
+//       // Add event listener
+//       element.addEventListener(eventName, eventListener);
+
+//       // Remove event listener on cleanup
+//       return () => {
+//         element.removeEventListener(eventName, eventListener);
+//       };
+//     },
+//     [eventName, element] // Re-run if eventName or element changes
+//   );
+// }
 
 function useWindowSize() {
   const isClient = typeof window === "object";
