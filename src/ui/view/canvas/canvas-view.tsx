@@ -8,6 +8,8 @@ import React, {
 import { CanvasContainer } from "./canvas-view-style";
 
 const ole3lines = "vjj";
+const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
+  "Akira";
 
 // Hook
 function usePrevious<T>(value: T) {
@@ -37,8 +39,8 @@ interface Props {
 export default function Canvas(props: Props) {
   const [isMouseDown, setMouseDown] = useState<boolean>(false);
   const [drawObject, setDrawObject] = useState<Position>();
-  const [undoImage, setUndoImage] = useState<ImageData | undefined>(undefined);
-  const [redoImage, setRedoImage] = useState<ImageData | undefined>(undefined);
+  const [undoImage, setUndoImage] = useState<ImageData[]>([]);
+  const [redoImage, setRedoImage] = useState<ImageData[]>([]);
 
   const [canvasState, setCanvasState] = useState<{
     element?: HTMLCanvasElement;
@@ -64,6 +66,57 @@ export default function Canvas(props: Props) {
 
   const windowSize = useWindowSize();
 
+  useEventListener("keypress", onKeyPress);
+
+  function onKeyPress(e: KeyboardEvent) {
+    if (e.keyCode === 26 && e.ctrlKey) {
+      undo();
+    }
+
+    if (e.keyCode === 25 && e.ctrlKey) {
+      redo();
+    }
+  }
+
+  function redo() {
+    if (!context) return;
+    if (redoImage.length !== 0) {
+      let imageData = context.getImageData(
+        0,
+        0,
+        windowSize.width,
+        windowSize.height
+      );
+      setUndoImage((prev) => [...prev, imageData]);
+
+      const r = redoImage.pop();
+      if (!r) return;
+      context.putImageData(r, 0, 0);
+    } else {
+      context.clearRect(0, 0, windowSize.width, windowSize.height);
+    }
+  }
+
+  function undo() {
+    if (!context) return;
+    if (undoImage.length !== 0) {
+      let imageData = context.getImageData(
+        0,
+        0,
+        windowSize.width,
+        windowSize.height
+      );
+
+      setRedoImage((prev) => [...prev, imageData]);
+
+      const u = undoImage.pop();
+      if (!u) return;
+      context.putImageData(u, 0, 0);
+    } else {
+      context.clearRect(0, 0, windowSize.width, windowSize.height);
+    }
+  }
+
   useEffect(() => {
     if (!element || !context) return;
     let imageData = context.getImageData(
@@ -86,6 +139,16 @@ export default function Canvas(props: Props) {
   const onDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       setMouseDown(true);
+
+      if (!context) return;
+      let imageData = context.getImageData(
+        0,
+        0,
+        windowSize.width,
+        windowSize.height
+      );
+
+      setUndoImage((prev) => [...prev, imageData]);
     },
     [isMouseDown]
   );
@@ -106,16 +169,6 @@ export default function Canvas(props: Props) {
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       setMouseDown(false);
       setDrawObject(undefined);
-
-      if (!context) return;
-      let imageData = context.getImageData(
-        0,
-        0,
-        windowSize.width,
-        windowSize.height
-      );
-
-      setUndoImage(imageData);
     },
     [isMouseDown, drawObject]
   );
@@ -146,41 +199,43 @@ export default function Canvas(props: Props) {
 }
 
 // // Hook
-// function useEventListener(eventName: string, handler: any, element = window) {
-//   // Create a ref that stores handler
-//   const savedHandler = useRef();
+function useEventListener(
+  eventName: string,
+  handler: Function,
+  element = window
+) {
+  // Create a ref that stores handler
+  const savedHandler = useRef<Function>();
 
-//   // Update ref.current value if handler changes.
-//   // This allows our effect below to always get latest handler ...
-//   // ... without us needing to pass it in effect deps array ...
-//   // ... and potentially cause effect to re-run every render.
-//   useEffect(() => {
-//     savedHandler.current = handler;
-//   }, [handler]);
+  // Update ref.current value if handler changes.
+  // This allows our effect below to always get latest handler ...
+  // ... without us needing to pass it in effect deps array ...
+  // ... and potentially cause effect to re-run every render.
+  useEffect(() => {
+    savedHandler.current = handler;
+  }, [handler]);
 
-//   useEffect(
-//     () => {
-//       // Make sure element supports addEventListener
-//       // On
-//       const isSupported = element && element.addEventListener;
-//       if (!isSupported) return;
+  useEffect(
+    () => {
+      // Make sure element supports addEventListener
+      const isSupported = element && element.addEventListener;
+      if (!isSupported) return;
 
-//       // Create event listener that calls handler function stored in ref
-//       if (!savedHandler || !savedHandler.current) return;
+      // Create event listener that calls handler function stored in ref
+      if (!savedHandler || !savedHandler.current) return;
+      const eventListener = (event: Event) => savedHandler.current?.(event);
 
-//       const eventListener = (event: Event) => savedHandler.current(event);
+      // Add event listener
+      element.addEventListener(eventName, eventListener);
 
-//       // Add event listener
-//       element.addEventListener(eventName, eventListener);
-
-//       // Remove event listener on cleanup
-//       return () => {
-//         element.removeEventListener(eventName, eventListener);
-//       };
-//     },
-//     [eventName, element] // Re-run if eventName or element changes
-//   );
-// }
+      // Remove event listener on cleanup
+      return () => {
+        element.removeEventListener(eventName, eventListener);
+      };
+    },
+    [eventName, element] // Re-run if eventName or element changes
+  );
+}
 
 function useWindowSize() {
   const isClient = typeof window === "object";
