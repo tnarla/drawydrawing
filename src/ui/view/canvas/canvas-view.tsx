@@ -246,9 +246,24 @@ export default function Canvas(props: Props) {
 
   const pencilRef = useRef<HTMLDivElement>();
 
+  const colors = [
+    "#f94144",
+    "#f3722c",
+    "#f8961e",
+    "#f9c74f",
+    "#90be6d",
+    "#43aa8b",
+    "#577590",
+    "#A163F5",
+    "#774936",
+    "#011627",
+  ];
+
+  const randomColor = colors[Math.floor(Math.random() * (colors.length - 1))];
+
   return (
     <CanvasContainer>
-      <PencilContainer ref={pencilRef as any}>
+      <PencilContainer ref={pencilRef as any} color={randomColor}>
         <PencilIcon />
       </PencilContainer>
       <canvas

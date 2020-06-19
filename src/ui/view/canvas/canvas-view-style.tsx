@@ -9,7 +9,7 @@ export const CanvasContainer = styled.div`
   background-color: white;
 `;
 
-export const PencilContainer = styled.div`
+export const PencilContainer = styled.div<{ color: string }>`
   display: flex;
   flex-direction: column;
 
@@ -19,5 +19,6 @@ export const PencilContainer = styled.div`
 
   & svg {
     width: 30px;
+    fill: ${(p) => p.color};
   }
 `;
