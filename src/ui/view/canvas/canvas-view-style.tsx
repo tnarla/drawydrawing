@@ -8,3 +8,16 @@ export const CanvasContainer = styled.div`
 
   background-color: white;
 `;
+
+export const PencilContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  pointer-events: none;
+
+  position: absolute;
+
+  & svg {
+    width: 30px;
+  }
+`;
