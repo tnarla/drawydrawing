@@ -91,6 +91,7 @@ export default function Canvas(props: Props) {
 
       const r = redoImage.pop();
       if (!r) return;
+
       context.putImageData(r, 0, 0);
     } else {
       context.clearRect(0, 0, windowSize.width, windowSize.height);
@@ -136,6 +137,52 @@ export default function Canvas(props: Props) {
     draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY);
   }, [drawObject]);
 
+  function fill(
+    x: number,
+    y: number,
+    color: string,
+    targetColor: string,
+    imageData: ImageData
+  ) {
+    // make imageData a 2d array
+    const data = imageData.data;
+    let betterData = [];
+    let bestestData = [];
+    for (let i = 0; (i += 4); i < data.length) {
+      betterData.push([data[i], data[i + 1], data[i + 2], data[i + 3]]);
+    }
+
+    for (let j = 0; (j += windowSize.width); j < betterData.length) {
+      bestestData.push(betterData.slice(j, windowSize.width * (j + 1)));
+    }
+  }
+
+  function flood_fill(
+    pos_x: number,
+    pos_y: number,
+    color: string,
+    targetColor: string,
+    bestestData: number[][][]
+  ) {
+    // get color in rbga []
+    if (!bestestData[pos_x] || !bestestData[pos_x][pos_y])
+      // if there is no wall or if i haven't been there
+      return; // already go back
+
+    // make sure this works
+    if (bestestData[pos_x][pos_y] != [0, 0, 0, 0]) return;
+
+    // TODO: next stream
+    // bestestData[pos_x][pos_y] = color; // mark the point so that I know if I passed through it.
+
+    // flood_fill(pos_x + 1, pos_y, color); // then i can either go south
+    // flood_fill(pos_x - 1, pos_y, color); // or north
+    // flood_fill(pos_x, pos_y + 1, color); // or east
+    // flood_fill(pos_x, pos_y - 1, color); // or west
+
+    return;
+  }
+
   const onDown = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
       setMouseDown(true);
@@ -147,6 +194,9 @@ export default function Canvas(props: Props) {
         windowSize.width,
         windowSize.height
       );
+
+      // // check if action is fill
+      // fill(1, 1, "hi", "hi", imageData);
 
       setUndoImage((prev) => [...prev, imageData]);
     },

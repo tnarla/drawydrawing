@@ -35,16 +35,13 @@ export const SidebarAction = styled.div<{ selected: boolean }>`
   justify-content: center;
   align-items: center;
 
+  cursor: pointer;
+
   &:hover {
     ${(p) => !p.selected && "background-color: #dddcdc;"}
   }
 
   ${(p) => (p.selected ? "background-color: #C0C0C0;" : "")}
-`;
-
-export const ModalContainer = styled.div`
-  display: flex;
-  align-items: center;
 `;
 
 export const ColorPicker = styled.div<{ color: string }>`
@@ -54,6 +51,16 @@ export const ColorPicker = styled.div<{ color: string }>`
   height: 24px;
 
   margin: 8px 4px;
+`;
+
+export const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+`;
+
+export const ModalContainer = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 export const SizePicker = styled.div<{ size: number; color: string }>`

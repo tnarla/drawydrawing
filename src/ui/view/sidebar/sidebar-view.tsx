@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from "react";
+import { ChromePicker } from "react-color";
 import {
   SidebarContainer,
   SidebarContent,
@@ -6,8 +7,8 @@ import {
   ModalContainer,
   ColorPicker,
   SizePicker,
+  GridContainer,
 } from "./sidebar-view-style";
-import Slider from "@material-ui/core/Slider";
 import ReactModal from "react-modal";
 
 interface Props {
@@ -16,7 +17,13 @@ interface Props {
   readonly penColor?: string;
 }
 
-export type SidebarAction = "color" | "draw" | "erase" | "save" | undefined;
+export type SidebarAction =
+  | "color"
+  | "draw"
+  | "erase"
+  | "save"
+  | "fill"
+  | undefined;
 
 export default function Sidebar(props: Props) {
   const [selectedAction, setSelectedAction] = useState<SidebarAction>(
@@ -54,6 +61,7 @@ export default function Sidebar(props: Props) {
   return (
     <>
       <Colors
+        penColor={props.penColor}
         setColor={props.setColor}
         isOpen={selectedAction === "color" && showModal}
         closeModal={closeModal}
@@ -102,6 +110,12 @@ export default function Sidebar(props: Props) {
           >
             💾
           </SidebarActionContainer>
+          <SidebarActionContainer
+            selected={selectedAction === "fill" && showModal}
+            onClick={() => console.log("fill")}
+          >
+            <span style={{ filter: "hue-rotate(90deg)" }}>🍁</span>
+          </SidebarActionContainer>
         </SidebarContent>
       </SidebarContainer>
     </>
@@ -149,15 +163,23 @@ function Colors(props: ModalProps) {
       }}
     >
       <ModalContainer>
-        {colors.map((color) => (
-          <ColorPicker
-            color={color}
-            onClick={() => {
-              props.setColor && props.setColor(color);
-              props.closeModal();
-            }}
-          />
-        ))}
+        <GridContainer>
+          {colors.map((color) => (
+            <ColorPicker
+              color={color}
+              onClick={() => {
+                props.setColor && props.setColor(color);
+                props.closeModal();
+              }}
+            />
+          ))}
+        </GridContainer>
+        <ChromePicker
+          color={props.penColor}
+          onChange={(color) => {
+            props.setColor && props.setColor(color.hex);
+          }}
+        />
       </ModalContainer>
     </ReactModal>
   );
