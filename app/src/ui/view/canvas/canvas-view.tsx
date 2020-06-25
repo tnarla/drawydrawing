@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-const ENDPOINT = "https://stark-headland-60896.herokuapp.com/";
+const ENDPOINT = "https://cryptic-savannah-67902.herokuapp.com/";
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
