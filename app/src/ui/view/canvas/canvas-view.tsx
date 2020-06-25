@@ -6,10 +6,24 @@ import React, {
   useRef,
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
+import socketIOClient from "socket.io-client";
+const ENDPOINT = "https://stark-headland-60896.herokuapp.com/";
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
   "Akira";
+
+  const socket = socketIOClient(ENDPOINT);
+
+
+interface CanvasData {
+ toX: number;
+ toY: number;
+ fromX: number;
+ fromY: number;
+ penColor: string;
+ penSize: number;
+}
 
 // Hook
 function usePrevious<T>(value: T) {
@@ -119,6 +133,20 @@ export default function Canvas(props: Props) {
   }
 
   useEffect(() => {
+    if (context !== undefined) {
+
+      socket.on("update", (data: CanvasData) => {
+        draw(data.toX, data.toY, data.fromX, data.fromY, data.penColor, data.penSize);
+  
+        // const canvasData = new Uint8ClampedArray(data.canvas);
+        // const imageData = new ImageData(canvasData, windowSize.width, windowSize.height);
+        // context.putImageData(imageData, 0, 0);
+      });
+
+    }
+  }, [context]);
+
+  useEffect(() => {
     if (!element || !context) return;
     let imageData = context.getImageData(
       0,
@@ -134,7 +162,9 @@ export default function Canvas(props: Props) {
   useEffect(() => {
     if (!drawObject || !prevPosition) return;
     const { mouseX, mouseY } = drawObject;
-    draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY);
+    const {penColor, penSize} = props;
+    socket.emit("sendImageData", {toX: mouseX, toY: mouseY, fromX: prevPosition.mouseX , fromY: prevPosition.mouseY, penColor, penSize } );
+    draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY, penColor, penSize);
   }, [drawObject]);
 
   function fill(
@@ -199,6 +229,8 @@ export default function Canvas(props: Props) {
       // fill(1, 1, "hi", "hi", imageData);
 
       setUndoImage((prev) => [...prev, imageData]);
+
+      
     },
     [isMouseDown]
   );
@@ -232,15 +264,17 @@ export default function Canvas(props: Props) {
     [isMouseDown, drawObject]
   );
 
-  function draw(mouseX: number, mouseY: number, fromX: number, fromY: number) {
-    if (context !== undefined) {
+  function draw(mouseX: number, mouseY: number, fromX: number, fromY: number, penColor: string, penSize: number) {
+    if (context !== undefined) { 
       context.beginPath();
-      context.lineWidth = props.penSize;
+      context.lineWidth = penSize;
       context.lineCap = "round";
-      context.strokeStyle = props.penColor;
+      context.strokeStyle = penColor;
       context.moveTo(fromX, fromY + 0.5);
       context.lineTo(mouseX, mouseY + 0.5);
       context.stroke();
+
+      
     }
   }
 
