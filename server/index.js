@@ -1,6 +1,9 @@
 var app = require("express")();
 var http = require("http").createServer(app);
+var cors = require('cors')
 var io = require("socket.io")(http);
+
+app.use(cors);
 
 let port = process.env.PORT;
 if (port == null || port == "") {
