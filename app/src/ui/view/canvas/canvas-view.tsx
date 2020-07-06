@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
+// const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
+const ENDPOINT = "http://localhost:7000/";
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =

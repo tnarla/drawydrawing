@@ -1,0 +1,21 @@
+
+- Multi-rooms
+    -host a room
+    -join a room via url
+
+- Bucket tool
+    - use fill algorithm
+
+- stamps (have to have macaroni pieces)
+
+- pressure sensitivity
+
+- rewrite in svelte if I hate myself
+
+- reevaluate all my life decisions up to this point
+- cry
+- cry more
+- eat my pint of ice cream
+- cry again
+
+
