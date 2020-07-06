@@ -14,15 +14,21 @@ app.use(cors({credentials: true}));
 
 let port = 7000;
 
+
 http.listen(port, () => {
   console.log(`listening on ${port}`);
 });
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  let roomID ="default";
+  console.log("a user connected"); 
+  socket.on('room', function(room) {
+    socket.join(room);
+    roomID = room;
+});
 
   socket.on("sendImageData", (data) => {
-    socket.broadcast.emit('update', data);
+    io.sockets.in(roomID).emit('update', data);
   });
 
   socket.on("disconnect", () => {

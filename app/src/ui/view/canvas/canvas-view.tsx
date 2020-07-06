@@ -7,8 +7,11 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
+import { useParams, useNavigate } from "itsy-bitsy-router";
+import * as shortid from "shortid";
 // const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
 const ENDPOINT = "http://localhost:7000/";
+
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
@@ -16,7 +19,7 @@ const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilit
 
   const socket = socketIOClient(ENDPOINT);
 
-
+  
 interface CanvasData {
  toX: number;
  toY: number;
@@ -168,6 +171,19 @@ export default function Canvas(props: Props) {
     draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY, penColor, penSize);
   }, [drawObject]);
 
+  
+const navigate = useNavigate();
+const {shortId } = useParams();
+
+if (!shortId) {
+  const sid = shortid.generate();
+  navigate(`/${sid}`);
+}
+
+useEffect(()=> {
+    socket.emit('room', shortId);
+},[shortId])
+
   function fill(
     x: number,
     y: number,
@@ -295,6 +311,8 @@ export default function Canvas(props: Props) {
   ];
 
   // const randomColor = colors[Math.floor(Math.random() * (colors.length - 1))];
+
+  
 
   return (
     <CanvasContainer>

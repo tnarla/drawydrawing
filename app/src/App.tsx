@@ -3,24 +3,11 @@ import "./App.css";
 import { Content } from "./App-style";
 import Sidebar from "./ui/view/sidebar/sidebar-view";
 import Canvas from "./ui/view/canvas/canvas-view";
-import * as shortid from "shortid";
-import {useRoutes, useNavigate} from "itsy-bitsy-router";
-
-
-// get a random shortid
-
-
-//
-
-
-
-
-// they pass in a random short id
+import {useRoutes, useNavigate, useParams} from "itsy-bitsy-router";
 
 function App() {
   const [penColor, setPenColor] = useState<string>("#f94144");
   const [penSize, setPenSize] = useState<number>(5);
-  const navigate = useNavigate();
 
   const content = ( <Content>
     <Sidebar
@@ -37,9 +24,9 @@ function App() {
     ],
     <p>404</p>
   );
-  const shortId = shortid.generate();
-  navigate(`/${shortId}`);
 
+  // check url param 
+  
   return (
     <Router render={({ children }) => (<div className="App">
       {children}

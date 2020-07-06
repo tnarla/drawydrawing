@@ -1,6 +1,9 @@
 
 - Multi-rooms
     -host a room
+        - generate a random string
+        - redirect to the URL 
+        - copy to their clipboard
     -join a room via url
 
 - Bucket tool
