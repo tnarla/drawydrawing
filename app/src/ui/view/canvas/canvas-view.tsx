@@ -7,22 +7,24 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
+const ENDPOINT =
+  process.env.NODE_ENV === "production"
+    ? "https://cryptic-savannah-67902.herokuapp.com/"
+    : "http://localhost:5000/";
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
   "Akira";
 
-  const socket = socketIOClient(ENDPOINT);
-
+const socket = socketIOClient(ENDPOINT);
 
 interface CanvasData {
- toX: number;
- toY: number;
- fromX: number;
- fromY: number;
- penColor: string;
- penSize: number;
+  toX: number;
+  toY: number;
+  fromX: number;
+  fromY: number;
+  penColor: string;
+  penSize: number;
 }
 
 // Hook
@@ -134,15 +136,20 @@ export default function Canvas(props: Props) {
 
   useEffect(() => {
     if (context !== undefined) {
-
       socket.on("update", (data: CanvasData) => {
-        draw(data.toX, data.toY, data.fromX, data.fromY, data.penColor, data.penSize);
-  
+        draw(
+          data.toX,
+          data.toY,
+          data.fromX,
+          data.fromY,
+          data.penColor,
+          data.penSize
+        );
+
         // const canvasData = new Uint8ClampedArray(data.canvas);
         // const imageData = new ImageData(canvasData, windowSize.width, windowSize.height);
         // context.putImageData(imageData, 0, 0);
       });
-
     }
   }, [context]);
 
@@ -162,9 +169,23 @@ export default function Canvas(props: Props) {
   useEffect(() => {
     if (!drawObject || !prevPosition) return;
     const { mouseX, mouseY } = drawObject;
-    const {penColor, penSize} = props;
-    socket.emit("sendImageData", {toX: mouseX, toY: mouseY, fromX: prevPosition.mouseX , fromY: prevPosition.mouseY, penColor, penSize } );
-    draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY, penColor, penSize);
+    const { penColor, penSize } = props;
+    socket.emit("sendImageData", {
+      toX: mouseX,
+      toY: mouseY,
+      fromX: prevPosition.mouseX,
+      fromY: prevPosition.mouseY,
+      penColor,
+      penSize,
+    });
+    draw(
+      mouseX,
+      mouseY,
+      prevPosition.mouseX,
+      prevPosition.mouseY,
+      penColor,
+      penSize
+    );
   }, [drawObject]);
 
   function fill(
@@ -229,8 +250,6 @@ export default function Canvas(props: Props) {
       // fill(1, 1, "hi", "hi", imageData);
 
       setUndoImage((prev) => [...prev, imageData]);
-
-      
     },
     [isMouseDown]
   );
@@ -264,8 +283,15 @@ export default function Canvas(props: Props) {
     [isMouseDown, drawObject]
   );
 
-  function draw(mouseX: number, mouseY: number, fromX: number, fromY: number, penColor: string, penSize: number) {
-    if (context !== undefined) { 
+  function draw(
+    mouseX: number,
+    mouseY: number,
+    fromX: number,
+    fromY: number,
+    penColor: string,
+    penSize: number
+  ) {
+    if (context !== undefined) {
       context.beginPath();
       context.lineWidth = penSize;
       context.lineCap = "round";
@@ -273,8 +299,6 @@ export default function Canvas(props: Props) {
       context.moveTo(fromX, fromY + 0.5);
       context.lineTo(mouseX, mouseY + 0.5);
       context.stroke();
-
-      
     }
   }
 
