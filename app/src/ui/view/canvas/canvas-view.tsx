@@ -7,26 +7,38 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
+<<<<<<< HEAD
 import { useParams, useNavigate } from "itsy-bitsy-router";
 import * as shortid from "shortid";
 // const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
 const ENDPOINT = "http://localhost:7000/";
 
+=======
+const ENDPOINT =
+  process.env.NODE_ENV === "production"
+    ? "https://cryptic-savannah-67902.herokuapp.com/"
+    : "http://localhost:5000/";
+>>>>>>> 1cb9a53718f012ca34b3277bd5db7ff87e99cec4
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
   "Akira";
 
+<<<<<<< HEAD
   const socket = socketIOClient(ENDPOINT);
 
   
+=======
+const socket = socketIOClient(ENDPOINT);
+
+>>>>>>> 1cb9a53718f012ca34b3277bd5db7ff87e99cec4
 interface CanvasData {
- toX: number;
- toY: number;
- fromX: number;
- fromY: number;
- penColor: string;
- penSize: number;
+  toX: number;
+  toY: number;
+  fromX: number;
+  fromY: number;
+  penColor: string;
+  penSize: number;
 }
 
 // Hook
@@ -138,15 +150,20 @@ export default function Canvas(props: Props) {
 
   useEffect(() => {
     if (context !== undefined) {
-
       socket.on("update", (data: CanvasData) => {
-        draw(data.toX, data.toY, data.fromX, data.fromY, data.penColor, data.penSize);
-  
+        draw(
+          data.toX,
+          data.toY,
+          data.fromX,
+          data.fromY,
+          data.penColor,
+          data.penSize
+        );
+
         // const canvasData = new Uint8ClampedArray(data.canvas);
         // const imageData = new ImageData(canvasData, windowSize.width, windowSize.height);
         // context.putImageData(imageData, 0, 0);
       });
-
     }
   }, [context]);
 
@@ -166,9 +183,23 @@ export default function Canvas(props: Props) {
   useEffect(() => {
     if (!drawObject || !prevPosition) return;
     const { mouseX, mouseY } = drawObject;
-    const {penColor, penSize} = props;
-    socket.emit("sendImageData", {toX: mouseX, toY: mouseY, fromX: prevPosition.mouseX , fromY: prevPosition.mouseY, penColor, penSize } );
-    draw(mouseX, mouseY, prevPosition.mouseX, prevPosition.mouseY, penColor, penSize);
+    const { penColor, penSize } = props;
+    socket.emit("sendImageData", {
+      toX: mouseX,
+      toY: mouseY,
+      fromX: prevPosition.mouseX,
+      fromY: prevPosition.mouseY,
+      penColor,
+      penSize,
+    });
+    draw(
+      mouseX,
+      mouseY,
+      prevPosition.mouseX,
+      prevPosition.mouseY,
+      penColor,
+      penSize
+    );
   }, [drawObject]);
 
   
@@ -246,8 +277,6 @@ useEffect(()=> {
       // fill(1, 1, "hi", "hi", imageData);
 
       setUndoImage((prev) => [...prev, imageData]);
-
-      
     },
     [isMouseDown]
   );
@@ -281,8 +310,15 @@ useEffect(()=> {
     [isMouseDown, drawObject]
   );
 
-  function draw(mouseX: number, mouseY: number, fromX: number, fromY: number, penColor: string, penSize: number) {
-    if (context !== undefined) { 
+  function draw(
+    mouseX: number,
+    mouseY: number,
+    fromX: number,
+    fromY: number,
+    penColor: string,
+    penSize: number
+  ) {
+    if (context !== undefined) {
       context.beginPath();
       context.lineWidth = penSize;
       context.lineCap = "round";
@@ -290,8 +326,6 @@ useEffect(()=> {
       context.moveTo(fromX, fromY + 0.5);
       context.lineTo(mouseX, mouseY + 0.5);
       context.stroke();
-
-      
     }
   }
 
