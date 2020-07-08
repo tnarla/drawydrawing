@@ -7,31 +7,21 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-<<<<<<< HEAD
 import { useParams, useNavigate } from "itsy-bitsy-router";
 import * as shortid from "shortid";
-// const ENDPOINT = "https://cors-anywhere.herokuapp.com/https://cryptic-savannah-67902.herokuapp.com/";
-const ENDPOINT = "http://localhost:7000/";
 
-=======
 const ENDPOINT =
   process.env.NODE_ENV === "production"
     ? "https://cryptic-savannah-67902.herokuapp.com/"
     : "http://localhost:5000/";
->>>>>>> 1cb9a53718f012ca34b3277bd5db7ff87e99cec4
 
 const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
   "Akira";
 
-<<<<<<< HEAD
   const socket = socketIOClient(ENDPOINT);
 
   
-=======
-const socket = socketIOClient(ENDPOINT);
-
->>>>>>> 1cb9a53718f012ca34b3277bd5db7ff87e99cec4
 interface CanvasData {
   toX: number;
   toY: number;
