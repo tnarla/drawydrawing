@@ -1,10 +1,12 @@
 
 - Multi-rooms
-    -host a room
-        - generate a random string
+    ✓ host a room
+        ✓ generate a random string
         - redirect to the URL 
         - copy to their clipboard
     -join a room via url
+    -make this work on netlify
+
 
 - Bucket tool
     - use fill algorithm
@@ -14,6 +16,9 @@
 - pressure sensitivity
 
 - rewrite in svelte if I hate myself
+
+- keyboard shortcuts or bindings
+
 
 - reevaluate all my life decisions up to this point
 - cry

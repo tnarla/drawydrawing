@@ -19,9 +19,8 @@ const ole3lines = "vjj";
 const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
   "Akira";
 
-  const socket = socketIOClient(ENDPOINT);
+const socket = socketIOClient(ENDPOINT);
 
-  
 interface CanvasData {
   toX: number;
   toY: number;
@@ -192,18 +191,17 @@ export default function Canvas(props: Props) {
     );
   }, [drawObject]);
 
-  
-const navigate = useNavigate();
-const {shortId } = useParams();
+  const navigate = useNavigate();
+  const { shortId } = useParams();
 
-if (!shortId) {
-  const sid = shortid.generate();
-  navigate(`/${sid}`);
-}
+  if (!shortId) {
+    const sid = shortid.generate();
+    navigate(`/${sid}`);
+  }
 
-useEffect(()=> {
-    socket.emit('room', shortId);
-},[shortId])
+  useEffect(() => {
+    socket.emit("room", shortId);
+  }, [shortId]);
 
   function fill(
     x: number,
@@ -335,8 +333,6 @@ useEffect(()=> {
   ];
 
   // const randomColor = colors[Math.floor(Math.random() * (colors.length - 1))];
-
-  
 
   return (
     <CanvasContainer>
