@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-import { useParams, useNavigate } from "itsy-bitsy-router";
+import { useParams, useHistory } from "react-router-dom";
 import * as shortid from "shortid";
 
 const ENDPOINT =
@@ -191,12 +191,12 @@ export default function Canvas(props: Props) {
     );
   }, [drawObject]);
 
-  const navigate = useNavigate();
+  const history = useHistory();
   const { shortId } = useParams();
 
   if (!shortId) {
     const sid = shortid.generate();
-    navigate(`/${sid}`);
+    history.push(`/${sid}`);
   }
 
   useEffect(() => {
