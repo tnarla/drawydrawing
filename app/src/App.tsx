@@ -1,32 +1,55 @@
-import React, { useState } from "react";
-import "./App.css";
+import React from "react";
 import { Content } from "./App-style";
 import Sidebar from "./ui/view/sidebar/sidebar-view";
 import Canvas from "./ui/view/canvas/canvas-view";
-
 import { BrowserRouter as Router, Route } from "react-router-dom";
 
-function App() {
-  const [penColor, setPenColor] = useState<string>("#f94144");
-  const [penSize, setPenSize] = useState<number>(5);
+type Props = {};
+type State = {
+  penColor: string;
+  penSize: number;
+};
 
-  // check url param
+class App extends React.Component<Props, State> {
+  state: State = {
+    penColor: "#f94144",
+    penSize: 5,
+  };
 
-  return (
-    <Router>
-      <Route path="/:shortId?">
-        <Content>
-          <Sidebar
-            setColor={setPenColor}
-            setSize={setPenSize}
-            penColor={penColor}
-          />
+  setPenColor = (penColor: string) => {
+    this.setState({
+      penColor,
+    });
+  };
 
-          <Canvas penColor={penColor} penSize={penSize} />
-        </Content>
-      </Route>
-    </Router>
-  );
+  setPenSize = (penSize: number) => {
+    this.setState({
+      penSize,
+    });
+  };
+
+  render() {
+    // check url param
+
+    return (
+      <Router>
+        <Route path="/:shortId?">
+          <Content>
+            <Sidebar
+              setColor={this.setPenColor}
+              setSize={this.setPenSize}
+              penColor={this.state.penColor}
+            />
+
+            <Canvas
+              penColor={this.state.penColor}
+              penSize={this.state.penSize}
+            />
+          </Content>
+        </Route>
+      </Router>
+    );
+  }
 }
 
 export default App;
