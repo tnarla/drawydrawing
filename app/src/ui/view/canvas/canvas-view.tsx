@@ -3,11 +3,13 @@ import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import * as shortid from "shortid";
+import { store } from "../../../models/store";
+import { observer } from "mobx-react";
 
 const ENDPOINT =
   process.env.NODE_ENV === "production"
     ? "https://cryptic-savannah-67902.herokuapp.com/"
-    : "http://localhost:5000/";
+    : "http://localhost:6000/";
 
 const socket = socketIOClient(ENDPOINT);
 
@@ -25,10 +27,7 @@ type Position = {
   mouseY: number;
 };
 
-type Props = RouteComponentProps<{ shortId?: string }> & {
-  penColor: string;
-  penSize: number;
-};
+type Props = RouteComponentProps<{ shortId?: string }>;
 
 type State = {
   isMouseDown: boolean;
@@ -55,18 +54,23 @@ class Canvas extends React.Component<Props, State> {
 
   ctx?: CanvasRenderingContext2D | null;
   canvasRef = React.createRef<HTMLCanvasElement>();
+  previewCtx?: CanvasRenderingContext2D | null;
+  previewCanvasRef = React.createRef<HTMLCanvasElement>();
   pencilRef = React.createRef<HTMLDivElement>();
 
   componentDidMount() {
-    if (!this.canvasRef.current) {
+    if (!this.canvasRef.current || !this.previewCanvasRef.current) {
       throw new Error("Could not find canvas ref");
     }
 
     this.ctx = this.canvasRef.current.getContext("2d");
+    this.previewCtx = this.previewCanvasRef.current.getContext("2d");
 
     // Set the initial size of the canvas:
     this.canvasRef.current.width = this.state.windowSize.width;
     this.canvasRef.current.height = this.state.windowSize.height;
+    this.previewCanvasRef.current.width = 180;
+    this.previewCanvasRef.current.height = 100;
 
     // Set up key handlers for redo and undo:
     document.addEventListener("keypress", (e) => {
@@ -126,6 +130,9 @@ class Canvas extends React.Component<Props, State> {
     if (this.props.match.params.shortId !== prevProps.match.params.shortId) {
       this.joinRoom();
     }
+
+    // Sync canvas:
+    this.previewCtx?.drawImage(this.canvasRef.current!, 0, 0, 180, 100);
   }
 
   joinRoom() {
@@ -250,8 +257,8 @@ class Canvas extends React.Component<Props, State> {
         toY: mouseY,
         fromX: prevPosition.mouseX,
         fromY: prevPosition.mouseY,
-        penColor: this.props.penColor,
-        penSize: this.props.penSize,
+        penColor: store.pen.color,
+        penSize: store.pen.size,
       });
 
       this.draw(
@@ -259,8 +266,8 @@ class Canvas extends React.Component<Props, State> {
         mouseY,
         prevPosition.mouseX,
         prevPosition.mouseY,
-        this.props.penColor,
-        this.props.penSize
+        store.pen.color,
+        store.pen.size
       );
     }
   };
@@ -272,12 +279,54 @@ class Canvas extends React.Component<Props, State> {
     });
   };
 
+  onDownload = () => {
+    if (!this.canvasRef.current) return;
+    let downloadLink = document.createElement("a");
+    downloadLink.setAttribute("download", "drawydrawing.png");
+    let dataURL = this.canvasRef.current.toDataURL("image/png");
+    let url = dataURL.replace(
+      /^data:image\/png/,
+      "data:application/octet-stream"
+    );
+    downloadLink.setAttribute("href", url);
+    downloadLink.click();
+  };
+
   render() {
     return (
       <CanvasContainer>
         <PencilContainer ref={this.pencilRef} color={"black"}>
           <PencilIcon />
         </PencilContainer>
+
+        <div
+          className={`rotate-small-boi border-4 border-indigo-600 rounded absolute top-4 bottom-4 m-6 bg-white cursor-pointer transition duration-100 ${
+            this.state.isMouseDown ? "pointer-events-none opacity-25" : ""
+          }`}
+          onClick={this.onDownload}
+        >
+          <canvas
+            className=""
+            style={{ height: 100, width: 180 }}
+            ref={this.previewCanvasRef}
+          />
+          <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white absolute bottom-0 right-0 z-10 shadow-lg -mr-4 -mb-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="h-6 w-6 block"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </div>
+        </div>
 
         <canvas
           style={{ display: "block", touchAction: "none" }}
@@ -318,4 +367,4 @@ const PencilIcon = () => {
   );
 };
 
-export default withRouter(Canvas);
+export default withRouter(observer(Canvas));

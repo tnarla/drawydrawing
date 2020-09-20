@@ -12,11 +12,42 @@ code {
     monospace;
 }
 
+.rotate-small-boi:hover {
+  animation-name: jiggle;
+  animation-iteration-count: infinite;
+  animation-duration: 2000ms;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in;
+}
+
+@keyframes jiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+  55% {
+    transform: rotate(-5deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
 html,
 body,
 #root {
   background-color: #f0f0f0;
-
   cursor: none;
+  height: 100vh;
 }
-

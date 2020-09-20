@@ -1,51 +1,24 @@
 import React from "react";
-import { Content } from "./App-style";
-import Sidebar from "./ui/view/sidebar/sidebar-view";
 import Canvas from "./ui/view/canvas/canvas-view";
 import { BrowserRouter as Router, Route } from "react-router-dom";
+import Header from "./ui/view/header/header-view";
+import ColorPicker from "./ui/view/color-picker/color-picker-view";
 
 type Props = {};
-type State = {
-  penColor: string;
-  penSize: number;
-};
 
-class App extends React.Component<Props, State> {
-  state: State = {
-    penColor: "#f94144",
-    penSize: 5,
-  };
-
-  setPenColor = (penColor: string) => {
-    this.setState({
-      penColor,
-    });
-  };
-
-  setPenSize = (penSize: number) => {
-    this.setState({
-      penSize,
-    });
-  };
-
+class App extends React.Component<Props> {
   render() {
     // check url param
 
     return (
       <Router>
         <Route path="/:shortId?">
-          <Content>
-            <Sidebar
-              setColor={this.setPenColor}
-              setSize={this.setPenSize}
-              penColor={this.state.penColor}
-            />
+          <div className="h-full">
+            <Header />
+            <ColorPicker />
 
-            <Canvas
-              penColor={this.state.penColor}
-              penSize={this.state.penSize}
-            />
-          </Content>
+            <Canvas />
+          </div>
         </Route>
       </Router>
     );
