@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { SidebarModalContainer } from "./sidebar-modal-style";
 
 interface Props {
@@ -6,22 +6,29 @@ interface Props {
   readonly show: boolean;
   readonly top: number;
 }
+type State = {
+  showModal: boolean;
+}
 
-export default function SidebarModal(props: Props) {
-  const { show, top, children } = props;
-  const [showModal, setShowModal] = useState<boolean>(false);
+export default class SidebarModal extends React.Component<Props, State> {
+  state: State = {
+    showModal: false,
+  };
 
-  const finalShow = show || showModal;
+  render() {
+    const { show, top, children } = this.props;
+    const finalShow = show || this.state.showModal;
 
-  return (
-    <SidebarModalContainer
-      onMouseOver={useCallback(() => {
-        setShowModal(true);
-      }, [showModal])}
-      show={finalShow}
-      top={top}
-    >
-      {children}
-    </SidebarModalContainer>
-  );
+    return (
+      <SidebarModalContainer
+        onMouseOver={() => {
+          this.setState({ showModal: true });
+        }}
+        show={finalShow}
+        top={top}
+      >
+        {children}
+      </SidebarModalContainer>
+    );
+  }
 }

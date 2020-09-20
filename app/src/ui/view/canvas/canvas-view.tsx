@@ -1,23 +1,13 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
 import socketIOClient from "socket.io-client";
-import { useParams, useHistory } from "react-router-dom";
+import { withRouter, RouteComponentProps } from "react-router-dom";
 import * as shortid from "shortid";
 
 const ENDPOINT =
   process.env.NODE_ENV === "production"
     ? "https://cryptic-savannah-67902.herokuapp.com/"
     : "http://localhost:5000/";
-
-const ole3lines = "vjj";
-const variablenamethatistotallyunreadablebutstillusedbecausetrugavechattheabilitytocomeupwiththeworstpossiblenameuwu =
-  "Akira";
 
 const socket = socketIOClient(ENDPOINT);
 
@@ -30,275 +20,119 @@ interface CanvasData {
   penSize: number;
 }
 
-// Hook
-function usePrevious<T>(value: T) {
-  // The ref object is a generic container whose current property is mutable ...
-  // ... and can hold any value, similar to an instance property on a class
-  const ref = useRef<T>();
-
-  // Store current value in ref
-  useEffect(() => {
-    ref.current = value;
-  }, [value]); // Only re-run if value changes
-
-  // Return previous value (happens before update in useEffect above)
-  return ref.current;
-}
-
 type Position = {
   mouseX: number;
   mouseY: number;
 };
 
-interface Props {
-  readonly penColor: string;
-  readonly penSize: number;
-}
+type Props = RouteComponentProps<{ shortId?: string }> & {
+  penColor: string;
+  penSize: number;
+};
 
-export default function Canvas(props: Props) {
-  const [isMouseDown, setMouseDown] = useState<boolean>(false);
-  const [drawObject, setDrawObject] = useState<Position>();
-  const [undoImage, setUndoImage] = useState<ImageData[]>([]);
-  const [redoImage, setRedoImage] = useState<ImageData[]>([]);
+type State = {
+  isMouseDown: boolean;
+  drawObject: Position | null;
+  undoImage: ImageData[];
+  redoImage: ImageData[];
+  windowSize: {
+    height: number;
+    width: number;
+  };
+};
 
-  const [canvasState, setCanvasState] = useState<{
-    element?: HTMLCanvasElement;
-    context?: CanvasRenderingContext2D;
-  }>({});
-
-  const { element, context } = canvasState;
-
-  const handleCanvasRef = useCallback((ref) => {
-    let ctx;
-
-    if (ref) {
-      ctx = ref.getContext("2d");
-    }
-
-    setCanvasState({
-      element: ref,
-      context: ctx,
-    });
-  }, []);
-
-  let prevPosition: Position | undefined = usePrevious(drawObject);
-
-  const windowSize = useWindowSize();
-
-  useEventListener("keypress", onKeyPress);
-
-  function onKeyPress(e: KeyboardEvent) {
-    if (e.keyCode === 26 && e.ctrlKey) {
-      undo();
-    }
-
-    if (e.keyCode === 25 && e.ctrlKey) {
-      redo();
-    }
-  }
-
-  function redo() {
-    if (!context) return;
-    if (redoImage.length !== 0) {
-      let imageData = context.getImageData(
-        0,
-        0,
-        windowSize.width,
-        windowSize.height
-      );
-      setUndoImage((prev) => [...prev, imageData]);
-
-      const r = redoImage.pop();
-      if (!r) return;
-
-      context.putImageData(r, 0, 0);
-    } else {
-      context.clearRect(0, 0, windowSize.width, windowSize.height);
-    }
-  }
-
-  function undo() {
-    if (!context) return;
-    if (undoImage.length !== 0) {
-      let imageData = context.getImageData(
-        0,
-        0,
-        windowSize.width,
-        windowSize.height
-      );
-
-      setRedoImage((prev) => [...prev, imageData]);
-
-      const u = undoImage.pop();
-      if (!u) return;
-      context.putImageData(u, 0, 0);
-    } else {
-      context.clearRect(0, 0, windowSize.width, windowSize.height);
-    }
-  }
-
-  useEffect(() => {
-    if (context !== undefined) {
-      socket.on("update", (data: CanvasData) => {
-        draw(
-          data.toX,
-          data.toY,
-          data.fromX,
-          data.fromY,
-          data.penColor,
-          data.penSize
-        );
-
-        // const canvasData = new Uint8ClampedArray(data.canvas);
-        // const imageData = new ImageData(canvasData, windowSize.width, windowSize.height);
-        // context.putImageData(imageData, 0, 0);
-      });
-    }
-  }, [context]);
-
-  useEffect(() => {
-    if (!element || !context) return;
-    let imageData = context.getImageData(
-      0,
-      0,
-      windowSize.width,
-      windowSize.height
-    );
-    element.width = windowSize.width;
-    element.height = windowSize.height;
-    context.putImageData(imageData, 0, 0);
-  }, [windowSize, context]);
-
-  useEffect(() => {
-    if (!drawObject || !prevPosition) return;
-    const { mouseX, mouseY } = drawObject;
-    const { penColor, penSize } = props;
-    socket.emit("sendImageData", {
-      toX: mouseX,
-      toY: mouseY,
-      fromX: prevPosition.mouseX,
-      fromY: prevPosition.mouseY,
-      penColor,
-      penSize,
-    });
-    draw(
-      mouseX,
-      mouseY,
-      prevPosition.mouseX,
-      prevPosition.mouseY,
-      penColor,
-      penSize
-    );
-  }, [drawObject]);
-
-  const history = useHistory();
-  const { shortId } = useParams();
-
-  if (!shortId) {
-    const sid = shortid.generate();
-    history.push(`/${sid}`);
-  }
-
-  useEffect(() => {
-    socket.emit("room", shortId);
-  }, [shortId]);
-
-  function fill(
-    x: number,
-    y: number,
-    color: string,
-    targetColor: string,
-    imageData: ImageData
-  ) {
-    // make imageData a 2d array
-    const data = imageData.data;
-    let betterData = [];
-    let bestestData = [];
-    for (let i = 0; (i += 4); i < data.length) {
-      betterData.push([data[i], data[i + 1], data[i + 2], data[i + 3]]);
-    }
-
-    for (let j = 0; (j += windowSize.width); j < betterData.length) {
-      bestestData.push(betterData.slice(j, windowSize.width * (j + 1)));
-    }
-  }
-
-  function flood_fill(
-    pos_x: number,
-    pos_y: number,
-    color: string,
-    targetColor: string,
-    bestestData: number[][][]
-  ) {
-    // get color in rbga []
-    if (!bestestData[pos_x] || !bestestData[pos_x][pos_y])
-      // if there is no wall or if i haven't been there
-      return; // already go back
-
-    // make sure this works
-    if (bestestData[pos_x][pos_y] != [0, 0, 0, 0]) return;
-
-    // TODO: next stream
-    // bestestData[pos_x][pos_y] = color; // mark the point so that I know if I passed through it.
-
-    // flood_fill(pos_x + 1, pos_y, color); // then i can either go south
-    // flood_fill(pos_x - 1, pos_y, color); // or north
-    // flood_fill(pos_x, pos_y + 1, color); // or east
-    // flood_fill(pos_x, pos_y - 1, color); // or west
-
-    return;
-  }
-
-  const onDown = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-      setMouseDown(true);
-
-      if (!context) return;
-      let imageData = context.getImageData(
-        0,
-        0,
-        windowSize.width,
-        windowSize.height
-      );
-
-      // // check if action is fill
-      // fill(1, 1, "hi", "hi", imageData);
-
-      setUndoImage((prev) => [...prev, imageData]);
+class Canvas extends React.Component<Props, State> {
+  state: State = {
+    isMouseDown: false,
+    drawObject: null,
+    undoImage: [],
+    redoImage: [],
+    windowSize: {
+      width: window.innerWidth,
+      height: window.innerHeight,
     },
-    [isMouseDown]
-  );
+  };
 
-  const onMove = useCallback(
-    (event: React.MouseEvent) => {
-      const mouseX = event.nativeEvent.offsetX;
-      const mouseY = event.nativeEvent.offsetY;
+  ctx?: CanvasRenderingContext2D | null;
+  canvasRef = React.createRef<HTMLCanvasElement>();
+  pencilRef = React.createRef<HTMLDivElement>();
 
-      // find the pencil
+  componentDidMount() {
+    if (!this.canvasRef.current) {
+      throw new Error("Could not find canvas ref");
+    }
 
-      if (pencilRef.current) {
-        pencilRef.current.style.transform = `translate3d(${mouseX}px, ${
-          mouseY - 30
-        }px, 0)`;
+    this.ctx = this.canvasRef.current.getContext("2d");
+
+    // Set the initial size of the canvas:
+    this.canvasRef.current.width = this.state.windowSize.width;
+    this.canvasRef.current.height = this.state.windowSize.height;
+
+    // Set up key handlers for redo and undo:
+    document.addEventListener("keypress", (e) => {
+      if (e.key === "z" && e.ctrlKey) {
+        this.undo();
       }
-      // set the style
 
-      if (isMouseDown) {
-        setDrawObject({ mouseX, mouseY });
+      if (e.key === "y" && e.ctrlKey) {
+        this.redo();
       }
-    },
-    [drawObject, isMouseDown]
-  );
+    });
 
-  const onUp = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-      setMouseDown(false);
-      setDrawObject(undefined);
-    },
-    [isMouseDown, drawObject]
-  );
+    // Listen for window resizing:
+    window.addEventListener("resize", (e) => {
+      const windowSize = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+      this.setState({ windowSize });
 
-  function draw(
+      const imageData = this.ctx!.getImageData(
+        0,
+        0,
+        windowSize.width,
+        windowSize.height
+      );
+      this.canvasRef.current!.width = windowSize.width;
+      this.canvasRef.current!.height = windowSize.height;
+      this.ctx!.putImageData(imageData, 0, 0);
+    });
+
+    // Whenever we get a draw event from the server, draw into the canvas:
+    socket.on("update", (data: CanvasData) => {
+      this.draw(
+        data.toX,
+        data.toY,
+        data.fromX,
+        data.fromY,
+        data.penColor,
+        data.penSize
+      );
+    });
+
+    // Join the room based on the URL
+    const { shortId } = this.props.match.params;
+
+    if (!shortId) {
+      const sid = shortid.generate();
+      this.props.history.push(`/${sid}`);
+    } else {
+      this.joinRoom();
+    }
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    // If the URL params change, then we need to re-join the socket room:
+    if (this.props.match.params.shortId !== prevProps.match.params.shortId) {
+      this.joinRoom();
+    }
+  }
+
+  joinRoom() {
+    socket.emit("room", this.props.match.params.shortId);
+  }
+
+  draw(
     mouseX: number,
     mouseY: number,
     fromX: number,
@@ -306,87 +140,155 @@ export default function Canvas(props: Props) {
     penColor: string,
     penSize: number
   ) {
-    if (context !== undefined) {
-      context.beginPath();
-      context.lineWidth = penSize;
-      context.lineCap = "round";
-      context.strokeStyle = penColor;
-      context.moveTo(fromX, fromY + 0.5);
-      context.lineTo(mouseX, mouseY + 0.5);
-      context.stroke();
+    if (!this.ctx) return;
+
+    this.ctx.beginPath();
+    this.ctx.lineWidth = penSize;
+    this.ctx.lineCap = "round";
+    this.ctx.strokeStyle = penColor;
+    this.ctx.moveTo(fromX, fromY + 0.5);
+    this.ctx.lineTo(mouseX, mouseY + 0.5);
+    this.ctx.stroke();
+  }
+
+  redo() {
+    if (!this.ctx) return;
+    const { redoImage } = this.state;
+
+    if (redoImage.length) {
+      const imageData = this.ctx.getImageData(
+        0,
+        0,
+        this.state.windowSize.width,
+        this.state.windowSize.height
+      );
+
+      this.setState({ undoImage: [...this.state.undoImage, imageData] });
+
+      const redoState = redoImage.pop();
+      if (!redoState) return;
+
+      this.ctx.putImageData(redoState, 0, 0);
+    } else {
+      this.ctx.clearRect(
+        0,
+        0,
+        this.state.windowSize.width,
+        this.state.windowSize.height
+      );
     }
   }
 
-  const pencilRef = useRef<HTMLDivElement>();
+  undo() {
+    if (!this.ctx) return;
+    const { undoImage } = this.state;
 
-  const colors = [
-    "#f94144",
-    "#f3722c",
-    "#f8961e",
-    "#f9c74f",
-    "#90be6d",
-    "#43aa8b",
-    "#577590",
-    "#A163F5",
-    "#774936",
-    "#011627",
-  ];
+    if (undoImage.length) {
+      const imageData = this.ctx.getImageData(
+        0,
+        0,
+        this.state.windowSize.width,
+        this.state.windowSize.height
+      );
 
-  // const randomColor = colors[Math.floor(Math.random() * (colors.length - 1))];
+      this.setState({ redoImage: [...this.state.redoImage, imageData] });
 
-  return (
-    <CanvasContainer>
-      <PencilContainer ref={pencilRef as any} color={"black"}>
-        <PencilIcon />
-      </PencilContainer>
-      <canvas
-        style={{ display: "block", touchAction: "none" }}
-        ref={handleCanvasRef}
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-      ></canvas>
-    </CanvasContainer>
-  );
-}
+      const undoState = undoImage.pop();
+      if (!undoState) return;
+      this.ctx.putImageData(undoState, 0, 0);
+    } else {
+      this.ctx.clearRect(
+        0,
+        0,
+        this.state.windowSize.width,
+        this.state.windowSize.height
+      );
+    }
+  }
 
-// // Hook
-function useEventListener(
-  eventName: string,
-  handler: Function,
-  element = window
-) {
-  // Create a ref that stores handler
-  const savedHandler = useRef<Function>();
+  onDown = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const mouseX = event.nativeEvent.offsetX;
+    const mouseY = event.nativeEvent.offsetY;
 
-  // Update ref.current value if handler changes.
-  // This allows our effect below to always get latest handler ...
-  // ... without us needing to pass it in effect deps array ...
-  // ... and potentially cause effect to re-run every render.
-  useEffect(() => {
-    savedHandler.current = handler;
-  }, [handler]);
+    let imageData = this.ctx!.getImageData(
+      0,
+      0,
+      this.state.windowSize.width,
+      this.state.windowSize.height
+    );
 
-  useEffect(
-    () => {
-      // Make sure element supports addEventListener
-      const isSupported = element && element.addEventListener;
-      if (!isSupported) return;
+    this.setState({
+      isMouseDown: true,
+      drawObject: {
+        mouseX,
+        mouseY,
+      },
+      undoImage: [...this.state.undoImage, imageData],
+    });
+  };
 
-      // Create event listener that calls handler function stored in ref
-      if (!savedHandler || !savedHandler.current) return;
-      const eventListener = (event: Event) => savedHandler.current?.(event);
+  onMove = (event: React.MouseEvent) => {
+    const mouseX = event.nativeEvent.offsetX;
+    const mouseY = event.nativeEvent.offsetY;
 
-      // Add event listener
-      element.addEventListener(eventName, eventListener);
+    // TODO: Move this into state:
+    if (this.pencilRef.current) {
+      this.pencilRef.current.style.transform = `translate3d(${mouseX}px, ${
+        mouseY - 30
+      }px, 0)`;
+    }
 
-      // Remove event listener on cleanup
-      return () => {
-        element.removeEventListener(eventName, eventListener);
-      };
-    },
-    [eventName, element] // Re-run if eventName or element changes
-  );
+    if (this.state.isMouseDown) {
+      const prevPosition = this.state.drawObject!;
+
+      this.setState({
+        drawObject: { mouseX, mouseY },
+      });
+
+      socket.emit("sendImageData", {
+        toX: mouseX,
+        toY: mouseY,
+        fromX: prevPosition.mouseX,
+        fromY: prevPosition.mouseY,
+        penColor: this.props.penColor,
+        penSize: this.props.penSize,
+      });
+
+      this.draw(
+        mouseX,
+        mouseY,
+        prevPosition.mouseX,
+        prevPosition.mouseY,
+        this.props.penColor,
+        this.props.penSize
+      );
+    }
+  };
+
+  onUp = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    this.setState({
+      isMouseDown: false,
+      drawObject: null,
+    });
+  };
+
+  render() {
+    return (
+      <CanvasContainer>
+        <PencilContainer ref={this.pencilRef} color={"black"}>
+          <PencilIcon />
+        </PencilContainer>
+
+        <canvas
+          style={{ display: "block", touchAction: "none" }}
+          ref={this.canvasRef}
+          onPointerDown={this.onDown}
+          onPointerMove={this.onMove}
+          onPointerUp={this.onUp}
+        />
+      </CanvasContainer>
+    );
+  }
 }
 
 const PencilIcon = () => {
@@ -416,30 +318,4 @@ const PencilIcon = () => {
   );
 };
 
-function useWindowSize() {
-  const isClient = typeof window === "object";
-
-  function getSize() {
-    return {
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-  }
-
-  const [windowSize, setWindowSize] = useState(getSize);
-
-  useEffect(() => {
-    if (!isClient) {
-      return;
-    }
-
-    function handleResize() {
-      setWindowSize(getSize());
-    }
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []); // Empty array ensures that effect is only run on mount and unmount
-
-  return windowSize;
-}
+export default withRouter(Canvas);

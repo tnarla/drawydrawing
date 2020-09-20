@@ -25,26 +25,30 @@ export type SidebarAction =
   | "fill"
   | undefined;
 
-export default function Sidebar(props: Props) {
-  const [selectedAction, setSelectedAction] = useState<SidebarAction>(
-    undefined
-  );
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [hoveredAction, setHoveredAction] = useState<SidebarAction>(undefined);
-  const [top, setTop] = useState<number>(-50);
+type State = {
+  selectedAction: SidebarAction | null;
+  hoveredAction: SidebarAction | null;
+  showModal: boolean;
+  top: number;
+};
 
-  function getTopBound(event: React.MouseEvent) {
-    var rect = event.currentTarget.getBoundingClientRect();
-    setTop(rect.top);
-  }
+export default class Sidebar extends React.Component<Props, State> {
+  state: State = {
+    selectedAction: null,
+    hoveredAction: null,
+    showModal: false,
+    top: -50,
+  };
 
-  function closeModal() {
-    setShowModal(false);
-    setHoveredAction(undefined);
-    setTop(-50);
-  }
+  closeModal = () => {
+    this.setState({
+      showModal: false,
+      hoveredAction: null,
+      top: -50,
+    });
+  };
 
-  function downloadCanvasAsImage() {
+  downloadCanvasAsImage = () => {
     let downloadLink = document.createElement("a");
     downloadLink.setAttribute("download", "CanvasAsImage.png");
     const canvas = document.querySelector("canvas");
@@ -56,70 +60,78 @@ export default function Sidebar(props: Props) {
     );
     downloadLink.setAttribute("href", url);
     downloadLink.click();
+  };
+
+  setTopBound(target: HTMLElement) {
+    var rect = target.getBoundingClientRect();
+    this.setState({ top: rect.top });
   }
 
-  return (
-    <>
-      <Colors
-        penColor={props.penColor}
-        setColor={props.setColor}
-        isOpen={selectedAction === "color" && showModal}
-        closeModal={closeModal}
-        top={top}
-      />
-      <Size
-        setSize={props.setSize}
-        isOpen={selectedAction === "draw" && showModal}
-        closeModal={closeModal}
-        top={top}
-        penColor={props.penColor}
-      />
-      <SidebarContainer>
-        <SidebarContent>
-          <SidebarActionContainer
-            selected={selectedAction === "color" && showModal}
-            onClick={useCallback(
-              (event) => {
-                setSelectedAction("color");
-                setShowModal(!showModal);
-                setHoveredAction("color");
-                getTopBound(event);
-              },
-              [selectedAction, showModal, hoveredAction, top]
-            )}
-          >
-            🎨
-          </SidebarActionContainer>
-          <SidebarActionContainer
-            selected={selectedAction === "draw" && showModal}
-            onClick={useCallback(
-              (event) => {
-                setSelectedAction("draw");
-                setShowModal(!showModal);
-                setHoveredAction("draw");
-                getTopBound(event);
-              },
-              [selectedAction, showModal, hoveredAction, top]
-            )}
-          >
-            🖌
-          </SidebarActionContainer>
-          <SidebarActionContainer
-            selected={selectedAction === "save" && showModal}
-            onClick={() => downloadCanvasAsImage()}
-          >
-            💾
-          </SidebarActionContainer>
-          <SidebarActionContainer
-            selected={selectedAction === "fill" && showModal}
-            onClick={() => console.log("fill")}
-          >
-            <span style={{ filter: "hue-rotate(90deg)" }}>🍁</span>
-          </SidebarActionContainer>
-        </SidebarContent>
-      </SidebarContainer>
-    </>
-  );
+  render() {
+    const { props } = this;
+    const { selectedAction, showModal, top } = this.state;
+
+    return (
+      <>
+        <Colors
+          penColor={props.penColor}
+          setColor={props.setColor}
+          isOpen={selectedAction === "color" && showModal}
+          closeModal={this.closeModal}
+          top={top}
+        />
+        <Size
+          setSize={props.setSize}
+          isOpen={selectedAction === "draw" && showModal}
+          closeModal={this.closeModal}
+          top={top}
+          penColor={props.penColor}
+        />
+        <SidebarContainer>
+          <SidebarContent>
+            <SidebarActionContainer
+              selected={selectedAction === "color" && showModal}
+              onClick={(event) => {
+                this.setState({
+                  selectedAction: "color",
+                  hoveredAction: "color",
+                  showModal: !showModal,
+                });
+                this.setTopBound(event.currentTarget);
+              }}
+            >
+              🎨
+            </SidebarActionContainer>
+            <SidebarActionContainer
+              selected={selectedAction === "draw" && showModal}
+              onClick={(event) => {
+                this.setState({
+                  selectedAction: "draw",
+                  hoveredAction: "draw",
+                  showModal: !showModal,
+                });
+                this.setTopBound(event.currentTarget);
+              }}
+            >
+              🖌
+            </SidebarActionContainer>
+            <SidebarActionContainer
+              selected={selectedAction === "save" && showModal}
+              onClick={this.downloadCanvasAsImage}
+            >
+              💾
+            </SidebarActionContainer>
+            <SidebarActionContainer
+              selected={selectedAction === "fill" && showModal}
+              onClick={() => console.log("fill")}
+            >
+              <span style={{ filter: "hue-rotate(90deg)" }}>🍁</span>
+            </SidebarActionContainer>
+          </SidebarContent>
+        </SidebarContainer>
+      </>
+    );
+  }
 }
 
 interface ModalProps extends Props {
