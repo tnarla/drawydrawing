@@ -1,17 +1,9 @@
 import React from "react";
 import { CanvasContainer, PencilContainer } from "./canvas-view-style";
-import socketIOClient from "socket.io-client";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import * as shortid from "shortid";
 import { store } from "../../../models/store";
 import { observer } from "mobx-react";
-
-const ENDPOINT =
-  process.env.NODE_ENV === "production"
-    ? "https://cryptic-savannah-67902.herokuapp.com/"
-    : "http://localhost:6000/";
-
-const socket = socketIOClient(ENDPOINT);
+import socket from "../../../socket";
 
 interface CanvasData {
   toX: number;
@@ -113,16 +105,6 @@ class Canvas extends React.Component<Props, State> {
         data.penSize
       );
     });
-
-    // Join the room based on the URL
-    const { shortId } = this.props.match.params;
-
-    if (!shortId) {
-      const sid = shortid.generate();
-      this.props.history.push(`/${sid}`);
-    } else {
-      this.joinRoom();
-    }
   }
 
   componentDidUpdate(prevProps: Props) {
@@ -136,7 +118,9 @@ class Canvas extends React.Component<Props, State> {
   }
 
   joinRoom() {
-    socket.emit("room", this.props.match.params.shortId);
+    if (this.props.match.params.shortId) {
+      socket.emit("join", this.props.match.params.shortId);
+    }
   }
 
   draw(
@@ -252,14 +236,16 @@ class Canvas extends React.Component<Props, State> {
         drawObject: { mouseX, mouseY },
       });
 
-      socket.emit("sendImageData", {
-        toX: mouseX,
-        toY: mouseY,
-        fromX: prevPosition.mouseX,
-        fromY: prevPosition.mouseY,
-        penColor: store.pen.color,
-        penSize: store.pen.size,
-      });
+      if (this.props.match.params.shortId) {
+        socket.emit("sendImageData", {
+          toX: mouseX,
+          toY: mouseY,
+          fromX: prevPosition.mouseX,
+          fromY: prevPosition.mouseY,
+          penColor: store.pen.color,
+          penSize: store.pen.size,
+        });
+      }
 
       this.draw(
         mouseX,
@@ -300,7 +286,7 @@ class Canvas extends React.Component<Props, State> {
         </PencilContainer>
 
         <div
-          className={`rotate-small-boi border-4 border-indigo-600 rounded absolute top-4 bottom-4 m-6 bg-white cursor-pointer transition duration-100 ${
+          className={`rotate-small-boi border-4 border-indigo-600 rounded absolute top-4 m-6 bg-white cursor-pointer transition duration-100 ${
             this.state.isMouseDown ? "pointer-events-none opacity-25" : ""
           }`}
           onClick={this.onDownload}
@@ -342,12 +328,7 @@ class Canvas extends React.Component<Props, State> {
 
 const PencilIcon = () => {
   return (
-    <svg
-      x="0px"
-      y="0px"
-      viewBox="0 0 469.336 469.336"
-      preserveAspectRatio="true"
-    >
+    <svg x="0px" y="0px" viewBox="0 0 469.336 469.336">
       <g>
         <g>
           <path

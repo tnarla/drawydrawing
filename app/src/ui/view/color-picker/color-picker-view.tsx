@@ -19,17 +19,20 @@ class ColorPicker extends React.PureComponent<{}> {
     ];
 
     return (
-      <div className="absolute z-10 bottom-0 flex space-x-1 p-6 cursor-pointer">
+      <div className="absolute z-10 bottom-0 flex space-x-1 p-6 cursor-pointer overflow-x-auto w-full ">
         {colors.map((color) => (
           <div
-            className={`p-1 rounded-full  border-4 opacity-75 hover:opacity-100 transition duration-150 ${
+            key={color}
+            className={`p-1 rounded-full border-4 opacity-75 hover:opacity-100 transition duration-150 ${
               store.pen.color === color
                 ? "border-indigo-600 opacity-100"
                 : "border-transparent"
             }`}
           >
             <div
-              className={`w-10 h-10 rounded-full `}
+              className={`w-10 h-10 rounded-full ${
+                color === "#fdfffc" ? "border-2 border-grey-600" : ""
+              }`}
               onClick={() => store.pen.setColor(color)}
               style={{ backgroundColor: color }}
             ></div>
