@@ -29,7 +29,7 @@
   },
   "scripts": {
     "start": "parcel ./src/index.html --open",
-    "build": "parcel build ./src/index.html --no-source-maps && cp -R ./public/ ./dist"
+    "build": "parcel build ./src/index.html --no-source-maps && cp ./public/_redirects ./dist/_redirects"
   },
   "browserslist": {
     "production": [
